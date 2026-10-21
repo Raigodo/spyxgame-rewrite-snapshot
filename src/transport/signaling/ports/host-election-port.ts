@@ -1,4 +1,4 @@
-import type { Unsubscribe } from "@/shared/kernel";
+import type { Unsubscribe } from "@/kernel";
 import type { RoomId, SignalingPeerId } from "../types";
 
 export type CandidateStage = "registered" | "confirmed";

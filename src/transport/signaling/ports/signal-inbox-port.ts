@@ -1,4 +1,4 @@
-import type { Unsubscribe } from "@/shared/kernel";
+import type { Unsubscribe } from "@/kernel";
 import type { MessageId, RoomId, SignalingMessage, SignalingPeerId } from "../types";
 
 /** One inbox per peer. Messages are stored under the recipient (`message.toPeerId`). */
