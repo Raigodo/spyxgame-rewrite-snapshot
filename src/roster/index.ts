@@ -1,5 +1,5 @@
 export { createRoster } from "./create-roster";
-export { rosterConfig } from "./config";
+export { DEFAULT_ROSTER_CONFIG, rosterConfig } from "./config";
 export type { RosterConfig } from "./config";
 export type {
   Player,

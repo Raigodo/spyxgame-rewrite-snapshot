@@ -1,5 +1,12 @@
 import { type KeyValueStore, Scope, type PeerId, type PlayerId, type RoomId } from "@/kernel";
-import { MemoryKeyValueStore } from "@/kernel/fakes";
+import {
+  FakeClock,
+  FakeIds,
+  FakePageLifecycle,
+  MemoryKeyValueStore,
+  nextMacrotask,
+  RecordingLogger,
+} from "@/kernel/fakes";
 import { linkConfig, signalingConfig } from "./config";
 import { FakeRtcConnectionProvider, FakeRtcNetwork } from "./link/fakes";
 import { joinTransport } from "./flow";
@@ -11,19 +18,11 @@ import {
   FakePortLife,
   FakeRoomMembership,
   FakeSignalInbox,
-  nextMacrotask,
 } from "./signaling/fakes";
-import { FakeClock } from "./testing/fake-clock";
-import { FakeIds } from "./testing/fake-ids";
-import { FakePageLifecycle } from "./testing/fake-page-lifecycle";
-import { RecordingLogger } from "./testing/recording-logger";
 import { ScopedClock } from "./testing/scoped-clock";
 
 export * from "./signaling/fakes";
 export * from "./link/fakes";
-export { FakeClock } from "./testing/fake-clock";
-export { FakeIds } from "./testing/fake-ids";
-export { RecordingLogger } from "./testing/recording-logger";
 
 export class FakeIceServerSource implements IceServerSource {
   async fetch() {

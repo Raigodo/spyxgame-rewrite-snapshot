@@ -89,3 +89,54 @@ describe("transport: drop", () => {
     expect(h.firestore.room(ROOM).host?.signalingPeerId).toBe(ta.self);
   });
 });
+
+describe("transport: leave, hand-off, size guard", () => {
+  it("a guest that leaves disappears from the host's members", async () => {
+    const h = new TransportHarness();
+    const a = h.addPeer("a");
+    const b = h.addPeer("b");
+    const ta = await h.join(a, ROOM);
+    const tb = await h.join(b, ROOM);
+    await tb.leave();
+    await tb.leave(); // idempotent
+    await h.advance(1_000);
+    expect(ta.members.get().has(tb.self)).toBe(false);
+    expect(ta.role.get()).toBe("host");
+  });
+
+  it("handOff gives the seat to the guest", async () => {
+    const h = new TransportHarness();
+    const a = h.addPeer("a");
+    const b = h.addPeer("b");
+    const ta = await h.join(a, ROOM);
+    const tb = await h.join(b, ROOM);
+    const result = await ta.handOff(tb.self);
+    await h.advance(2_000);
+    expect(result.ok).toBe(true);
+    expect(tb.role.get()).toBe("host");
+    expect(ta.role.get()).toBe("guest");
+  });
+
+  it("handOff from a guest is refused", async () => {
+    const h = new TransportHarness();
+    const a = h.addPeer("a");
+    const b = h.addPeer("b");
+    const ta = await h.join(a, ROOM);
+    const tb = await h.join(b, ROOM);
+    const result = await tb.handOff(ta.self);
+    expect(result).toEqual({ ok: false, reason: "not-host" });
+  });
+
+  it("an oversize message is refused at the sender", async () => {
+    const h = new TransportHarness();
+    const a = h.addPeer("a");
+    const b = h.addPeer("b");
+    const ta = await h.join(a, ROOM);
+    const tb = await h.join(b, ROOM);
+    const atB = collect(tb);
+    ta.send(tb.self, "x".repeat(12_000 * 256 + 10));
+    await h.settle();
+    expect(atB).toEqual([]);
+    expect(h.logger.messages("warn")).toContain("Refused to send an oversize message");
+  });
+});

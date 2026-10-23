@@ -1,4 +1,4 @@
-import { defineConfig, limit, timer, value, type ConfigValues } from "@/kernel";
+import { defineConfig, limit, resolveConfig, timer, value, type ConfigValues } from "@/kernel";
 
 export const rosterConfig = defineConfig("roster", {
   maxPlayers: limit(32, {
@@ -26,3 +26,5 @@ export const rosterConfig = defineConfig("roster", {
 });
 
 export type RosterConfig = ConfigValues<typeof rosterConfig>;
+
+export const DEFAULT_ROSTER_CONFIG: RosterConfig = resolveConfig(rosterConfig);
