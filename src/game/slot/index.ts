@@ -119,7 +119,12 @@ export function observeAll(slot: Slot, observation: Observation, env: SlotEnv): 
 
 /** A new slot from a validated start plan, with every feature's initial value and the first private pieces. */
 export function createSlot(
-  input: { runtime: { id: string; version: number }; plan: StartPlan; setup: SlotSetup; seed: number },
+  input: {
+    runtime: { id: string; version: number };
+    plan: StartPlan;
+    setup: SlotSetup;
+    seed: number;
+  },
   env: SlotEnv
 ): Result<{ slot: Slot; writes: PrivateWrite[] }, "invalid-private"> {
   const base: Slot = {

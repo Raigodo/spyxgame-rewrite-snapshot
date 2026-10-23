@@ -96,8 +96,7 @@ export function defineGame<T extends GameTypes>(spec: GameSpec<T>): GameDef<T> {
   const modes: readonly LobbyMode[] = spec.modes;
   const commands = spec.commands as unknown as Record<string, ErasedCommand>;
   const events = spec.events as unknown as
-    | Record<string, { schema: { check(input: unknown): Result<unknown, Issue> } }>
-    | undefined;
+    Record<string, { schema: { check(input: unknown): Result<unknown, Issue> } }> | undefined;
   const timerDefs = spec.timers as unknown as Record<string, ErasedTimer> | undefined;
   const rejoinRule = spec.presence?.rejoin ?? "restore";
 
@@ -157,7 +156,12 @@ export function defineGame<T extends GameTypes>(spec: GameSpec<T>): GameDef<T> {
       return def ? (def.who ?? "participant") : undefined;
     },
 
-    start(input: StartInput): Result<StartPlan, "invalid-settings" | "unsupported-mode" | "too-few-players" | "too-many-players"> {
+    start(
+      input: StartInput
+    ): Result<
+      StartPlan,
+      "invalid-settings" | "unsupported-mode" | "too-few-players" | "too-many-players"
+    > {
       const { setup, seed } = input;
       if (!modes.some((mode) => mode === setup.mode)) return fail("unsupported-mode");
       if (setup.participants.length < players.min) return fail("too-few-players");

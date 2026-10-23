@@ -43,7 +43,10 @@ export function parseTimers(raw: unknown, env: ParseEnv): TimersX | undefined {
     if (!validId(id, env) || !isRecord(item)) continue;
     if (typeof item.timer !== "string" || !finite(item.deadlineAt)) continue;
     const frozen = item.frozenMs;
-    if (frozen !== undefined && !(finite(frozen) && frozen >= 0 && frozen <= env.config.maxTimerMs)) {
+    if (
+      frozen !== undefined &&
+      !(finite(frozen) && frozen >= 0 && frozen <= env.config.maxTimerMs)
+    ) {
       continue;
     }
     const payload = env.runtime.parseTimerPayload(item.timer, item.payload);
@@ -86,7 +89,12 @@ export function syncTimerPause(x: TimersX, paused: boolean, now: number): Timers
 /** Due on the host clock, not frozen, game not paused. */
 export function isDue(slot: Slot, id: string, now: number): boolean {
   const timer = timersOf(slot)[id];
-  return timer !== undefined && timer.frozenMs === undefined && !isPaused(slot) && timer.deadlineAt <= now;
+  return (
+    timer !== undefined &&
+    timer.frozenMs === undefined &&
+    !isPaused(slot) &&
+    timer.deadlineAt <= now
+  );
 }
 
 export function dueTimers(slot: Slot, now: number): string[] {

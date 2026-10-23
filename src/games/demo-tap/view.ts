@@ -22,7 +22,9 @@ export function standings(view: GameView<TapTypes>): Standing[] {
 }
 
 /** Teams mode only: total taps per team, highest first. */
-export function teamTotals(view: GameView<TapTypes>): { team: string; total: number }[] | undefined {
+export function teamTotals(
+  view: GameView<TapTypes>
+): { team: string; total: number }[] | undefined {
   if (view.setup.mode !== "teams") return undefined;
   const totals = new Map<string, number>(view.setup.teamIds.map((team) => [team, 0]));
   for (const row of standings(view)) {

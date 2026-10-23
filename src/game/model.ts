@@ -191,7 +191,10 @@ export type GameSpec<T extends GameTypes> = {
   };
   events?: { [K in T["event"]["type"]]: { schema: Schema<EventOf<T, K>> } };
   timers?: {
-    [timer: string]: { schema?: Schema<unknown>; reduce(a: TimerArgs<T>, payload: unknown): Outcome<T> };
+    [timer: string]: {
+      schema?: Schema<unknown>;
+      reduce(a: TimerArgs<T>, payload: unknown): Outcome<T>;
+    };
   };
   /** Late joiners are spectators unless this admits them. Once per player, on the host. */
   late?(a: RosterArgs<T> & { playerId: PlayerId }): LateDecision<T> | undefined;
@@ -240,15 +243,34 @@ export interface GameRuntime {
   parsePrivate(raw: unknown): { value: unknown } | undefined;
   /** undefined: no such command. */
   commandWho(type: string): CommandWho | undefined;
-  start(input: StartInput): Result<StartPlan, "invalid-settings" | "unsupported-mode" | "too-few-players" | "too-many-players">;
+  start(
+    input: StartInput
+  ): Result<
+    StartPlan,
+    "invalid-settings" | "unsupported-mode" | "too-few-players" | "too-many-players"
+  >;
   /** Validates the command (`"invalid"`), then runs its reducer. */
-  play(slot: Slot, command: unknown, sender: Sender, view: PrivateView<unknown>): Result<Reduction, string>;
+  play(
+    slot: Slot,
+    command: unknown,
+    sender: Sender,
+    view: PrivateView<unknown>
+  ): Result<Reduction, string>;
   /** undefined: no handler for this timer. */
-  fire(slot: Slot, timer: string, payload: unknown, view: PrivateView<unknown>): Result<Reduction, string> | undefined;
+  fire(
+    slot: Slot,
+    timer: string,
+    payload: unknown,
+    view: PrivateView<unknown>
+  ): Result<Reduction, string> | undefined;
   late(slot: Slot, playerId: PlayerId): LateOutcome | undefined;
   rejoin(slot: Slot, playerId: PlayerId): RejoinStrategy;
   /** Runs `presence.onChange`. undefined: nothing to change. */
-  changed(slot: Slot, changes: readonly PresenceChange[], view: PrivateView<unknown>): Reduction | undefined;
+  changed(
+    slot: Slot,
+    changes: readonly PresenceChange[],
+    view: PrivateView<unknown>
+  ): Reduction | undefined;
   initialPrivate(slot: Slot, playerId: PlayerId): unknown;
   recoverPrivate(slot: Slot, playerId: PlayerId): unknown;
 }
@@ -403,7 +425,10 @@ export interface GameApi {
   };
   readonly actions: {
     /** Host. */
-    start<T extends GameTypes>(def: GameDef<T>, settings: T["settings"]): Promise<Result<void, StartReject>>;
+    start<T extends GameTypes>(
+      def: GameDef<T>,
+      settings: T["settings"]
+    ): Promise<Result<void, StartReject>>;
     /** Host. */
     end(): Promise<Result<void, EndReject>>;
     /** The same object for the same def. */

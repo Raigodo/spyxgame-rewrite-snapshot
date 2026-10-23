@@ -4,12 +4,7 @@
 // Waits with real setImmediate: never combine with vi.useFakeTimers().
 
 import { Scope, as, type PeerId, type PlayerId, type Store } from "@/kernel";
-import {
-  FakeClock,
-  FakeIds,
-  MemoryKeyValueStore,
-  RecordingLogger,
-} from "@/kernel/fakes";
+import { FakeClock, FakeIds, MemoryKeyValueStore, RecordingLogger } from "@/kernel/fakes";
 import { DEFAULT_BUS_CONFIG, createBus, type Bus } from "@/bus";
 import { FakeBusNetwork, type FakeTransport } from "@/bus/fakes";
 import { rosterConfig } from "./config";

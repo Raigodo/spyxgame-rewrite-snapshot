@@ -86,7 +86,7 @@ export function buildView<T extends GameTypes>(input: {
     paused: isPaused(slot),
     notices: noticesOf(slot).list.map((n) => n.event),
     timers,
-  } as GameView<T>;
+  } as unknown as GameView<T>;
 }
 
 /** "none": seen the channel with no slot of this game. undefined: not seen it yet. */

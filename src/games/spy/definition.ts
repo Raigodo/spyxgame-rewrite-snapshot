@@ -22,13 +22,7 @@ import {
   settleState,
   type SpyOutcome,
 } from "./rules";
-import {
-  MAX_PLAYERS,
-  commandSchemas,
-  settingsSchema,
-  stateSchema,
-  type SpyTypes,
-} from "./schemas";
+import { MAX_PLAYERS, commandSchemas, settingsSchema, stateSchema, type SpyTypes } from "./schemas";
 
 const toOutcome = (outcome: SpyOutcome): Outcome<SpyTypes> =>
   outcome.ok ? ok({ state: outcome.state }) : fail(outcome.reason);

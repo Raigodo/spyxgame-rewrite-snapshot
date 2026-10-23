@@ -55,8 +55,7 @@ export function createGameHandle<T extends GameTypes>(deps: HandleDeps): GameHan
   const gameId = runtime.id;
 
   /** This game is the active one and the channel is synced. */
-  const isActive = (): boolean =>
-    state.synced.get() && state.value.get()?.slot?.gameId === gameId;
+  const isActive = (): boolean => state.synced.get() && state.value.get()?.slot?.gameId === gameId;
 
   const view = derived(
     [state.value, state.synced, priv.mine] as const,
@@ -85,9 +84,8 @@ export function createGameHandle<T extends GameTypes>(deps: HandleDeps): GameHan
     on: (fn) => noticeEmitter.on(({ event }) => fn(event)),
   };
 
-  const activeRound = derived(
-    [state.value] as const,
-    (value) => (value?.slot?.gameId === gameId ? value.round : undefined)
+  const activeRound = derived([state.value] as const, (value) =>
+    value?.slot?.gameId === gameId ? value.round : undefined
   );
   const locals = new Map<string, { value: Store<unknown>; set(next: unknown): void }>();
 

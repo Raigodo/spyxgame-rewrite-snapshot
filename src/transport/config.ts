@@ -8,35 +8,27 @@ export interface IceServer {
 
 export const signalingConfig = defineConfig("signaling", {
   candidateCollectionWindowMs: timer(3_000, {
-    protects:
-      "Guests noticing a dead host at different moments; also the unstamped reclaim grace and the point where the suspected host is removed.",
-    ifTooShort: "A late detector misses the list; the atomic claim still keeps one winner.",
+    why: "Allows guests detecting a dead host at different moments to collect election candidates before choosing a winner. Also covers the unstamped reclaim grace before suspected-host removal.",
     destructive: true,
   }),
   positionIntervalMs: timer(1_500, {
-    protects: "Candidate 0 dying after confirming. Position n waits n intervals.",
-    ifTooShort: "Candidate 1 elects before seeing candidate 0's write.",
+    why: "Candidate position delay: candidate n waits n intervals, giving earlier candidates time to confirm.",
   }),
   candidateConfirmWindowMs: timer(700, {
-    protects: "Candidates that died during the window being elected.",
-    ifTooShort: "Slow confirms are missed; the atomic claim still keeps one winner.",
+    why: "Allows a candidate to confirm its presence before it can be elected.",
   }),
   ackTimeoutMs: timer(15_000, {
-    protects: "A peer in membership that never reads its signal inbox.",
-    ifTooShort: "Deletes a slow-but-live peer (vetoed when its data channel is active).",
+    why: "Maximum wait for a peer to acknowledge its signal inbox. An active data channel vetoes removal.",
     destructive: true,
   }),
   messageRetentionMs: timer(60 * 60 * 1000, {
-    protects: "Unconsumed signal docs piling up (Firestore TTL, lazy).",
-    ifTooShort: "A pending signal is deleted before it is read.",
+    why: "Retention period for unconsumed signaling messages before Firestore TTL cleanup.",
   }),
   candidateRetentionMs: timer(60 * 60 * 1000, {
-    protects: "Election candidate docs left behind.",
-    ifTooShort: "A candidate disappears mid-election.",
+    why: "Retention period for election candidate documents before Firestore TTL cleanup.",
   }),
   roomRetentionMs: timer(7 * 24 * 60 * 60 * 1000, {
-    protects: "Abandoned rooms, memberships and host docs piling up.",
-    ifTooShort: "A live session longer than this loses its membership or host doc.",
+    why: "Retention period for abandoned room, membership and host documents before Firestore TTL cleanup. Must exceed the expected lifetime of active sessions.",
     destructive: true,
   }),
 });
@@ -44,62 +36,63 @@ export const signalingConfig = defineConfig("signaling", {
 export const linkConfig = defineConfig("link", {
   iceServers: value<readonly IceServer[]>(
     [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
-    "STUN-only fallback; relay servers come from the IceServerSource port."
+    "STUN-only fallback servers used when relay credentials are unavailable."
   ),
   iceFetchTimeoutMs: timer(4_000, {
-    protects: "Waiting for relay credentials before joining.",
-    ifTooShort: "Falls back to STUN-only more often.",
+    why: "Maximum wait for relay credentials before proceeding with the STUN-only fallback.",
   }),
   offerTimeoutMs: timer(12_000, {
-    protects: "A host that never sends an offer.",
-    ifTooShort: "Suspects a live host on slow ICE or a slow join.",
+    why: "Maximum wait for an offer from the host before the peer is suspected of being unresponsive.",
     destructive: true,
   }),
   reconnectTimeoutMs: timer(5_000, {
-    protects: "A guest waiting forever for a re-offer after its link died.",
-    ifTooShort: "Drops the local entry early; an arriving offer recreates it.",
+    why: "Maximum wait for a replacement offer after a guest's link dies before its local entry is dropped.",
   }),
   reclaimWindowMs: timer(10_000, {
-    protects: "A refreshed host retrying claimHost while its old peer still looks present.",
-    ifTooShort: "The seat goes to someone else.",
+    why: "Allows a refreshed host to reclaim its seat while its previous peer still appears present.",
   }),
   byeFlushMs: timer(500, {
-    protects: "Closing a link before the `bye` frame has drained.",
-    ifTooShort: "The dropped peer may not learn why and falls back to its own detection.",
+    why: "Allows the bye frame to drain before the data channel closes.",
   }),
   hostClaimMaxAgeMs: timer(15_000, {
-    protects: "A stale pagehide stamp being trusted.",
-    ifTooShort: "A slow reload falls back to the slow reclaim path.",
+    why: "Maximum age of a pagehide stamp that can be trusted during host-seat reclamation.",
   }),
   iceBatchWindowMs: timer(300, {
-    protects: "One signal doc per ICE candidate.",
-    ifTooShort: "Smaller batches, more docs.",
+    why: "Collects outgoing ICE candidates into batches to reduce signaling document writes.",
   }),
-  iceMaxBatch: limit(20, { protects: "Size of one outgoing ICE batch." }),
+  iceMaxBatch: limit(20, {
+    why: "Maximum number of ICE candidates in one outgoing batch.",
+  }),
   probeIdleMs: timer(10_000, {
-    protects: "A data channel that stays open but carries nothing.",
-    ifTooShort: "A briefly frozen tab is declared dead and re-linked.",
+    why: "Maximum idle period before probing a data channel that remains open.",
     destructive: true,
   }),
   probeTimeoutMs: timer(5_000, {
-    protects: "The wait for the pong.",
-    ifTooShort: "Same as probeIdleMs.",
+    why: "Maximum wait for a pong response before the probe is considered failed.",
     destructive: true,
   }),
   disconnectGraceMs: timer(3_000, {
-    protects: "A transient 'disconnected' (VPN or Wi-Fi hiccup) that heals by itself.",
-    ifTooShort: "A flaky link is declared dead and re-linked; a guest may suspect the host.",
+    why: "Allows a transient disconnected state, such as a Wi-Fi or VPN interruption, to recover before the link is considered dead.",
     destructive: true,
   }),
   chunkBufferTtlMs: timer(30_000, {
-    protects: "Partial messages that never complete.",
-    ifTooShort: "Large messages on slow links are dropped.",
+    why: "Maximum lifetime of an incomplete reassembled message before its partial buffer is discarded.",
   }),
-  maxChunkChars: limit(12_000, { protects: "One data-channel frame (UTF-16 units)." }),
-  maxChunksPerMessage: limit(256, { protects: "Memory per reassembled message." }),
-  maxSdpChars: limit(100_000, { protects: "Incoming offer/answer size." }),
-  maxCandidateChars: limit(4_000, { protects: "One incoming ICE candidate." }),
-  maxIceCandidatesPerSignal: limit(50, { protects: "Incoming ICE batch size." }),
+  maxChunkChars: limit(12_000, {
+    why: "Maximum size of one data-channel frame in UTF-16 code units.",
+  }),
+  maxChunksPerMessage: limit(256, {
+    why: "Maximum chunks retained for one reassembled message, bounding its memory usage.",
+  }),
+  maxSdpChars: limit(100_000, {
+    why: "Maximum accepted size of an incoming SDP offer or answer.",
+  }),
+  maxCandidateChars: limit(4_000, {
+    why: "Maximum accepted size of one incoming ICE candidate.",
+  }),
+  maxIceCandidatesPerSignal: limit(50, {
+    why: "Maximum number of ICE candidates accepted in one signaling batch.",
+  }),
 });
 
 export type SignalingConfig = ConfigValues<typeof signalingConfig>;

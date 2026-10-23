@@ -39,7 +39,10 @@ export const notices: SlotFeature<NoticesX> = {
       const event = env.runtime.parseEvent(effect.event);
       if (!event) return fail("invalid-effect");
       const seq = x.seq + 1;
-      return ok({ seq, list: [...x.list, { seq, event: event.value }].slice(-env.config.maxNotices) });
+      return ok({
+        seq,
+        list: [...x.list, { seq, event: event.value }].slice(-env.config.maxNotices),
+      });
     },
   },
 };

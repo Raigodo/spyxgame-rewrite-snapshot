@@ -17,7 +17,14 @@ import type {
   SlotEnv,
   SlotSetup,
 } from "./model";
-import { COMMAND, GAME_CHANNEL, GAME_PRIVATE_CHANNEL, LOBBY_MODES, MAX_INT32, MAX_UINT32 } from "./names";
+import {
+  COMMAND,
+  GAME_CHANNEL,
+  GAME_PRIVATE_CHANNEL,
+  LOBBY_MODES,
+  MAX_INT32,
+  MAX_UINT32,
+} from "./names";
 import { authorize, checkStart, finish, lateJoin, newcomers, recordNames } from "./rules";
 import { applyReduction, createSlot, observeAll, parseX } from "./slot";
 import { resume } from "./slot/presence";
@@ -71,7 +78,15 @@ function slotSchema(runtimes: ReadonlyMap<string, GameRuntime>, config: GameConf
 
     if (!runtime) {
       if (rec.x !== undefined && !isRecord(rec.x)) return issue("x", "record");
-      return ok({ gameId, version, seed, setup, settings: rec.settings, state: rec.state, x: rec.x ?? {} });
+      return ok({
+        gameId,
+        version,
+        seed,
+        setup,
+        settings: rec.settings,
+        state: rec.state,
+        x: rec.x ?? {},
+      });
     }
     if (version > runtime.version) return issue("version", `at most ${runtime.version}`);
     const settings = runtime.parseSettings(rec.settings, version);
@@ -123,14 +138,18 @@ export function gameStateDef(deps: GameChannelDeps): StateDef<GameState, GameCom
   );
   const ids = s.list(s.id("player"), { max, onInvalid: "reject" });
   const command = s.custom<unknown>((input) =>
-    isRecord(input) && typeof input.type === "string" ? ok(input) : issue("command", "object with a type")
+    isRecord(input) && typeof input.type === "string"
+      ? ok(input)
+      : issue("command", "object with a type")
   );
 
-  const envFor = (
-    runtime: GameRuntime,
-    ctx: { now: number },
-    round: number
-  ): SlotEnv => ({ config, runtime, now: ctx.now, round, private: deps.view() });
+  const envFor = (runtime: GameRuntime, ctx: { now: number }, round: number): SlotEnv => ({
+    config,
+    runtime,
+    now: ctx.now,
+    round,
+    private: deps.view(),
+  });
 
   /** The state and writes of a committed pipeline result; an `end` becomes `finish`, with no writes. */
   const settle = (
@@ -194,7 +213,12 @@ export function gameStateDef(deps: GameChannelDeps): StateDef<GameState, GameCom
           if (!slot || !runtime) return fail("no-active-game");
           if (ctx.playerId === undefined) return fail("unknown-sender");
           const env = envFor(runtime, ctx, state.round);
-          const out = runtime.play(slot, p.command, { playerId: ctx.playerId, peerId: ctx.from }, env.private);
+          const out = runtime.play(
+            slot,
+            p.command,
+            { playerId: ctx.playerId, peerId: ctx.from },
+            env.private
+          );
           if (!out.ok) return out;
           const done = applyReduction(slot, out.value, env);
           return done.ok ? settle(state, done.value) : fail(done.reason);

@@ -33,6 +33,5 @@ export const demoTap = defineGame<TapTypes>({
 
   events: { emote: { schema: emoteSchema } },
 
-  late: (a) =>
-    a.setup.mode === "teams" ? undefined : { state: admitLate(a.state, a.playerId) },
+  late: (a) => (a.setup.mode === "teams" ? undefined : { state: admitLate(a.state, a.playerId) }),
 });

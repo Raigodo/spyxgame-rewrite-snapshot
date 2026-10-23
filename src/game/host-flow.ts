@@ -7,15 +7,7 @@
 // it has nothing to do, so the loop ends by itself. `maxSettlePasses` is only a safety net.
 
 import type { BusSync, StateHandle } from "@/bus";
-import type {
-  Cancel,
-  Clock,
-  Listenable,
-  Logger,
-  PlayerId,
-  Scope,
-  Store,
-} from "@/kernel";
+import type { Cancel, Clock, Listenable, Logger, PlayerId, Scope, Store } from "@/kernel";
 import type { GameConfig } from "./config";
 import type { GameCommand, GameRuntime, GameState, InputPlayer } from "./model";
 import { nextWakeAt } from "./rules";

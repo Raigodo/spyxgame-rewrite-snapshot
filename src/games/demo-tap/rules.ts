@@ -8,7 +8,11 @@ export function initialState(participants: readonly PlayerId[]): TapState {
 }
 
 /** One tap. The first to reach `goal` wins and the race is over. */
-export function tap(state: TapState, playerId: PlayerId, goal: number): Result<TapState, TapReject> {
+export function tap(
+  state: TapState,
+  playerId: PlayerId,
+  goal: number
+): Result<TapState, TapReject> {
   if (state.winner) return fail("game-over");
   const score = (state.scores[playerId] ?? 0) + 1;
   return ok({
