@@ -5,8 +5,10 @@
 import {
   Emitter,
   derived,
+  listenerFailure,
   structurallyEqual,
   type Listenable,
+  type Logger,
   type PeerId,
   type PlayerId,
   type Store,
@@ -81,10 +83,11 @@ export interface ChangeEvents {
   watch(source: Store<readonly Player[] | undefined>): Unsubscribe;
 }
 
-export function createChangeEvents(): ChangeEvents {
-  const joined = new Emitter<Player>();
-  const rejoined = new Emitter<Player>();
-  const left = new Emitter<{ player: Player; reason: "expired" | "removed" }>();
+export function createChangeEvents(log: Logger): ChangeEvents {
+  const onError = listenerFailure(() => log);
+  const joined = new Emitter<Player>(onError);
+  const rejoined = new Emitter<Player>(onError);
+  const left = new Emitter<{ player: Player; reason: "expired" | "removed" }>(onError);
 
   return {
     joined,

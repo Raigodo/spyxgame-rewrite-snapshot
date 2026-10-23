@@ -50,7 +50,7 @@ export class GuestFlow {
       transport.role.subscribe(again),
       bus.sync.subscribe(again),
       state.value.subscribe(again),
-      events.events.subscribe(({ event, from }) => {
+      events.events.on(({ event, from }) => {
         // Only the host may ping; anyone else's ping is ignored.
         if (event.kind === EVENT.ping && from === transport.host.get()) {
           events.sendTo(from, { kind: EVENT.pong, nonce: event.nonce });

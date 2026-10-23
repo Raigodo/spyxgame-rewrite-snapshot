@@ -59,11 +59,7 @@ export function applyJoin(
   if (existing.peerId === actor.from && existing.goneAt === undefined) return ok(state);
 
   // Another peer holds it and its link is healthy: the host must arbitrate (ping), not take over.
-  if (
-    existing.peerId !== undefined &&
-    existing.peerId !== actor.from &&
-    existing.link === "active"
-  ) {
+  if (existing.peerId !== undefined && existing.peerId !== actor.from && existing.link === "active") {
     return fail("taken");
   }
 
@@ -185,9 +181,7 @@ export function entriesToPlayers(state: RosterState, view: Viewpoint): Player[] 
       joinedAt: entry.joinedAt,
     };
   });
-  return players.sort(
-    (a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-  );
+  return players.sort((a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
 /** Host time at which the next ghost expires, or undefined when there are no ghosts. */

@@ -5,7 +5,7 @@
 //  4. arbitrate duplicate tabs of one player with ping/pong.
 // One idempotent `reconcile`, re-run on every input change. No heartbeats, no polling.
 
-import type { Cancel, Clock, Logger, PlayerId, Unsubscribe } from "@/kernel";
+import type { Cancel, Clock, Logger, PeerId, PlayerId, Unsubscribe } from "@/kernel";
 import type { Bus } from "@/bus";
 import type { Transport } from "@/transport";
 import type { RosterConfig } from "./config";
@@ -42,6 +42,7 @@ export class HostFlow {
   private readonly pending = new Map<string, Pending>();
   /** Challenges already resolved and waiting for the drop to show up in membership. */
   private readonly settled = new Set<string>();
+  private readonly expelling = new Set<PeerId>();
   private cancelExpiry: Cancel | undefined;
   private unsubscribes: Unsubscribe[] = [];
   private seq = 0;
@@ -61,7 +62,7 @@ export class HostFlow {
       transport.links.subscribe(again),
       bus.sync.subscribe(again),
       state.value.subscribe(again),
-      events.events.subscribe(({ event, from }) => {
+      events.events.on(({ event, from }) => {
         if (event.kind === EVENT.pong) this.onPong(event.nonce, from);
       }),
     ];
@@ -102,6 +103,7 @@ export class HostFlow {
     this.joinSelf();
     this.scheduleExpiry();
     this.arbitrate();
+    this.enforceBans();
   }
 
   private apply(cmd: RosterCommand): void {
@@ -172,6 +174,21 @@ export class HostFlow {
     }
   }
 
+  // 5. A banned player's peer that is still a member (a client that ignored its refusal).
+  private enforceBans(): void {
+    const { transport, state, log } = this.deps;
+    const bans = state.value.get()?.bans;
+    if (!bans || bans.length === 0) return;
+    for (const member of transport.members.get().values()) {
+      if (!member.playerId || !bans.includes(member.playerId) || this.expelling.has(member.peerId)) continue;
+      this.expelling.add(member.peerId);
+      transport
+        .drop(member.peerId, "kicked")
+        .catch((error: unknown) => log.warn("Dropping a banned peer failed", { error }))
+        .finally(() => this.expelling.delete(member.peerId));
+    }
+  }
+
   /** Ping the holder once its link is active (or after linkWaitMs), then wait for the pong. */
   private advance(key: string): void {
     const p = this.pending.get(key);
@@ -227,5 +244,6 @@ export class HostFlow {
     for (const p of this.pending.values()) p.cancel?.();
     this.pending.clear();
     this.settled.clear();
+    this.expelling.clear();
   }
 }

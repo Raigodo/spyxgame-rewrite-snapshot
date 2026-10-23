@@ -40,7 +40,7 @@ export function createRoster(deps: RosterDeps, scope: Scope): Roster {
     selfPeerId: transport.self,
     hostPeerId: transport.host,
   });
-  const changes = createChangeEvents();
+  const changes = createChangeEvents(log.child("events"));
   scope.add(changes.watch(view.loaded));
 
   const hostFlow = new HostFlow({
